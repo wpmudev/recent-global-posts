@@ -1,0 +1,12 @@
+Plugin Name: Recent Posts
+Author: Andrew Billits
+
+Files:
+----------------------------------------------------------------------
+
+recent-posts.php - goes in /wp-content/mu-plugins
+
+Instructions:
+----------------------------------------------------------------------
+1) Place the files in the specified directories
+2) Look at the top of recent-posts.php for usage examples
