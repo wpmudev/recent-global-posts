@@ -1,16 +1,16 @@
 <?php
 /*
-Plugin Name: Recent Posts
+Plugin Name: Recent Posts function and Shortcode
 Plugin URI:
 Description: Recent posts function and shortcode
-Author: Andrew Billits (Incsub)
+Author: Barry (Incsub)
 Version: 2.1
 Author URI:
 WDP ID: 75
 */
 
 /*
-Copyright 2007-2009 Incsub (http://incsub.com)
+Copyright 2012 Incsub (http://incsub.com)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License (Version 2 - GPLv2) as published by
@@ -33,118 +33,120 @@ display_recent_posts(NUMBER,TITLE_CHARACTERS,CONTENT_CHARACTERS,TITLE_CONTENT_DI
 Ex:
 display_recent_posts(10,40,150,'<br />','<strong>','</strong>','<ul>','</ul>','<li>','</li>','yes','yes',16, 'post', true);
 */
-/* -------------------- Update Notifications Notice -------------------- */
-if ( !function_exists( 'wdp_un_check' ) ) {
-  add_action( 'admin_notices', 'wdp_un_check', 5 );
-  add_action( 'network_admin_notices', 'wdp_un_check', 5 );
-  function wdp_un_check() {
-    if ( !class_exists( 'WPMUDEV_Update_Notifications' ) && current_user_can( 'edit_users' ) )
-      echo '<div class="error fade"><p>' . __('Please install the latest version of <a href="http://premium.wpmudev.org/project/update-notifications/" title="Download Now &raquo;">our free Update Notifications plugin</a> which helps you stay up-to-date with the most stable, secure versions of WPMU DEV themes and plugins. <a href="http://premium.wpmudev.org/wpmu-dev/update-notifications-plugin-information/">More information &raquo;</a>', 'wpmudev') . '</a></p></div>';
-  }
-}
-/* --------------------------------------------------------------------- */
+class recentpostsshortcode {
 
-//------------------------------------------------------------------------//
-//---Config---------------------------------------------------------------//
-//------------------------------------------------------------------------//
+	var $build = 1;
 
-//------------------------------------------------------------------------//
-//---Hook-----------------------------------------------------------------//
-//------------------------------------------------------------------------//
+	var $db;
 
-//------------------------------------------------------------------------//
-//---Functions------------------------------------------------------------//
-//------------------------------------------------------------------------//
+	function __construct() {
 
-//------------------------------------------------------------------------//
-//---Output Functions-----------------------------------------------------//
-//------------------------------------------------------------------------//
+		global $wpdb;
 
-function display_recent_posts($tmp_number,$tmp_title_characters = 0,$tmp_content_characters = 0,$tmp_title_content_divider = '<br />',$tmp_title_before,$tmp_title_after,$tmp_global_before,$tmp_global_after,$tmp_before,$tmp_after,$tmp_title_link = 'no',$tmp_show_avatars = 'yes', $tmp_avatar_size = 16, $posttype = 'post', $output = true){
-	global $wpdb;
-	$query = $wpdb->prepare("SELECT * FROM " . $wpdb->base_prefix . "site_posts WHERE blog_public = '1' AND post_type = %s ORDER BY post_published_stamp DESC LIMIT %d", $posttype, $tmp_number);
-	$tmp_posts = $wpdb->get_results( $query, ARRAY_A );
+		$this->db =& $wpdb;
 
-	$html = '';
-
-	if (count($tmp_posts) > 0){
-		$html .= $tmp_global_before;
-
-		$default_avatar = get_option('default_avatar');
-		foreach ($tmp_posts as $tmp_post){
-
-			$html .= $tmp_before;
-			if ( $tmp_title_characters > 0 ) {
-				$html .= $tmp_title_before;
-				if ( $tmp_show_avatars == 'yes' ) {
-					if ( $tmp_title_link == 'no' ) {
-						$html .= get_avatar( $tmp_post['post_author'], $tmp_avatar_size, $default_avatar) . ' ' . substr($tmp_post['post_title'],0,$tmp_title_characters);
-					} else {
-						$html .= get_avatar( $tmp_post['post_author'], $tmp_avatar_size, $default_avatar) . ' <a href="' . $tmp_post['post_permalink'] . '" style="text-decoration:none;">' . substr($tmp_post['post_title'],0,$tmp_title_characters) . '</a>';
-					}
-				} else {
-					if ( $tmp_title_link == 'no' ) {
-						$html .= substr($tmp_post['post_title'],0,$tmp_title_characters);
-					} else {
-						$html .= '<a href="' . $tmp_post['post_permalink'] . '" style="text-decoration:none;">' . substr($tmp_post['post_title'],0,$tmp_title_characters) . '</a>';
-					}
-				}
-				$html .= $tmp_title_after;
-			}
-			$html .= $tmp_title_content_divider;
-			if ( $tmp_content_characters > 0 ) {
-				$html .= substr($tmp_post['post_content_stripped'],0,$tmp_content_characters);
-			}
-			$html .= $tmp_after;
+		if($this->db->blogid == 1) {
+			// Only add the feed for the main site
+			add_action('init', array(&$this, 'initialise_recentpostsshortcode') );
 		}
-		$html .= $tmp_global_after;
+
+		add_shortcode( 'globalrecentposts', array( &$this, 'display_recent_posts_shortcode') );
 
 	}
 
-	if($output) {
-		echo $html;
-	} else {
+	function recentpostsshortcode() {
+		$this->__construct();
+	}
+
+	function initialise_recentpostsshortcode() {
+		// In case we need it in future :)
+	}
+
+	function display_recent_posts($tmp_number,$tmp_title_characters = 0,$tmp_content_characters = 0,$tmp_title_content_divider = '<br />',$tmp_title_before,$tmp_title_after,$tmp_global_before,$tmp_global_after,$tmp_before,$tmp_after,$tmp_title_link = 'no',$tmp_show_avatars = 'yes', $tmp_avatar_size = 16, $posttype = 'post', $output = true) {
+
+		global $network_query, $network_post;
+
+		$network_query = network_query_posts( array( 'post_type' => $posttype, 'posts_per_page' => $tmp_number ));
+
+		$html = '';
+
+		if( network_have_posts() ) {
+			$html .= $tmp_global_before;
+			$default_avatar = get_option('default_avatar');
+
+			while( network_have_posts()) {
+				network_the_post();
+
+				$html .= $tmp_before;
+				if ( $tmp_title_characters > 0 ) {
+					$html .= $tmp_title_before;
+					if ( $tmp_show_avatars == 'yes' ) {
+						$the_author = network_get_the_author_id();
+						$html .= get_avatar( $the_author, $tmp_avatar_size, $default_avatar) . ' ';
+					}
+					$the_title = network_get_the_title();
+					if ( $tmp_title_link == 'no' ) {
+						$html .= substr($the_title,0,$tmp_title_characters);
+					} else {
+						$html .= '<a href="' . network_get_permalink() . '" style="text-decoration:none;">' . substr($the_title,0,$tmp_title_characters) . '</a>';
+					}
+
+					$html .= $tmp_title_after;
+				}
+				$html .= $tmp_title_content_divider;
+
+				if ( $tmp_content_characters > 0 ) {
+					$the_content = network_get_the_content();
+					$html .= substr(strip_tags($the_content),0,$tmp_content_characters);
+				}
+				$html .= $tmp_after;
+
+			}
+			$html .= $tmp_global_after;
+		}
+
+		if($output) {
+			echo $html;
+		} else {
+			return $html;
+		}
+
+	}
+
+	function display_recent_posts_shortcode($atts, $content = null, $code = "") {
+
+		$defaults = array(	'number'	=>	5,
+							'title_characters' => 250,
+							'content_characters' => 0,
+							'title_content_divider' => '<br />',
+							'title_before'	=>	'',
+							'title_after'	=>	'',
+							'global_before'	=>	'<ul>',
+							'global_after'	=>	'</ul>',
+							'before'	=>	'<li>',
+							'after'	=>	'</li>',
+							'title_link' => 'yes',
+							'show_avatars' => 'no',
+							'avatar_size' => 16,
+							'posttype' => 'post'
+						);
+
+		extract(shortcode_atts($defaults, $atts));
+
+		$html = '';
+
+		$html .= $this->display_recent_posts( $number, $title_characters, $content_characters, $title_content_divider, $title_before, $title_after, $global_before, $global_after, $before, $after, $title_link, $show_avatars, $avatar_size, $posttype, false);
+
 		return $html;
+
 	}
 
 }
 
-function display_recent_posts_shortcode($atts, $content = null, $code = "") {
+function display_recent_posts($tmp_number,$tmp_title_characters = 0,$tmp_content_characters = 0,$tmp_title_content_divider = '<br />',$tmp_title_before,$tmp_title_after,$tmp_global_before,$tmp_global_after,$tmp_before,$tmp_after,$tmp_title_link = 'no',$tmp_show_avatars = 'yes', $tmp_avatar_size = 16, $posttype = 'post', $output = true) {
+	global $recentpostsshortcode;
 
-	$defaults = array(	'number'	=>	5,
-						'title_characters' => 250,
-						'content_characters' => 0,
-						'title_content_divider' => '<br />',
-						'title_before'	=>	'',
-						'title_after'	=>	'',
-						'global_before'	=>	'<ul>',
-						'global_after'	=>	'</ul>',
-						'before'	=>	'<li>',
-						'after'	=>	'</li>',
-						'title_link' => 'yes',
-						'show_avatars' => 'no',
-						'avatar_size' => 16,
-						'posttype' => 'post'
-					);
-
-	extract(shortcode_atts($defaults, $atts));
-
-	$html = '';
-
-	$html .= display_recent_posts( $number, $title_characters, $content_characters, $title_content_divider, $title_before, $title_after, $global_before, $global_after, $before, $after, $title_link, $show_avatars, $avatar_size, $posttype, false);
-
-	return $html;
-
+	$recentpostsshortcode->display_recent_posts( $tmp_number, $tmp_title_characters, $tmp_content_characters, $tmp_title_content_divider, $tmp_title_before, $tmp_title_after, $tmp_global_before, $tmp_global_after, $tmp_before, $tmp_after, $tmp_title_link, $tmp_show_avatars, $tmp_avatar_size, $posttype, $output );
 }
-add_shortcode( 'globalrecentposts', 'display_recent_posts_shortcode');
 
-
-//------------------------------------------------------------------------//
-//---Page Output Functions------------------------------------------------//
-//------------------------------------------------------------------------//
-
-//------------------------------------------------------------------------//
-//---Support Functions----------------------------------------------------//
-//------------------------------------------------------------------------//
-
-?>
+$recentpostsshortcode = new recentpostsshortcode();
