@@ -4,7 +4,7 @@ Plugin Name: Recent Posts function and Shortcode
 Plugin URI:
 Description: Recent posts function and shortcode
 Author: Barry (Incsub)
-Version: 3.0 RC 1
+Version: 3.0
 Author URI:
 WDP ID: 75
 */
