@@ -88,7 +88,7 @@ class recentpostsshortcode {
 					if ( $tmp_title_link == 'no' ) {
 						$html .= substr($the_title,0,$tmp_title_characters);
 					} else {
-						$html .= '<a href="' . network_get_permalink() . '" style="text-decoration:none;">' . substr($the_title,0,$tmp_title_characters) . '</a>';
+						$html .= '<a href="' . network_get_permalink() . '" >' . substr($the_title,0,$tmp_title_characters) . '</a>';
 					}
 
 					$html .= $tmp_title_after;
