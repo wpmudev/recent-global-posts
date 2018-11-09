@@ -4,7 +4,7 @@ Plugin Name: Recent Network Posts
 Plugin URI: http://premium.wpmudev.org/project/recent-posts/
 Description: Display a customizable list of recent posts from across your Multisite network on your site.
 Author: WPMU DEV
-Version: 3.0
+Version: 3.1-beta-1
 Author URI: http://premium.wpmudev.org/
 WDP ID: 75
 */
