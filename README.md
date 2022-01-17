@@ -20,7 +20,7 @@ This plugin uses the power of [Post Indexer](http://premium.wpmudev.org/projec
 
 ### To Get Started:
 
-Start by reading the [Installing Plugins](https://premium.wpmudev.org/wpmu-manual/installing-regular-plugins-on-wpmu/) section in our comprehensive [WordPress and WordPress Multisite Manual](https://premium.wpmudev.org/wpmu-manual/) if you are new to WordPress. _This plugin requires the [Post Indexer](https://premium.wpmudev.org/project/post-indexer) plugin_ _If you have an older version of Network Recent Posts installed in /mu-plugins/ please delete it._ Once installed and _network-activated_, it's ready to use. There's no configuration necessary!
+Start by reading the [Installing Plugins](https://wpmudev.com/docs/using-wordpress/installing-wordpress-plugins/) section in our comprehensive [WordPress and WordPress Multisite Manual](https://premium.wpmudev.org/wpmu-manual/) if you are new to WordPress. _This plugin requires the [Post Indexer](https://premium.wpmudev.org/project/post-indexer) plugin_ _If you have an older version of Network Recent Posts installed in /mu-plugins/ please delete it._ Once installed and _network-activated_, it's ready to use. There's no configuration necessary!
 
 ### Displaying your network posts
 
